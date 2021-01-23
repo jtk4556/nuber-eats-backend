@@ -1,0 +1,32 @@
+sudo npm i -g @nestjs/cli
+nest
+
+
+nest g mo restaurants
+
+npm install class-validator
+npm install class-transformer
+
+## postgres 설치 
+npm install --save @nestjs/typeorm typeorm pg
+
+## .env 설정위해 설치
+npm install --svae @nestjs/config
+
+
+npm install --save joi
+
+
+nest g mo users
+nest g mo common
+
+#password hash 위해 사용
+npm install --save bcrypt
+npm install --save @types/bcrypt --dev-only
+
+
+nest g mo auth
+
+npm run start:dev
+
+psql -h localhost -U jtk4556 nuber.eats
