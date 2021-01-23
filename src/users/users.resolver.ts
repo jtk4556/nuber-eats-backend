@@ -1,10 +1,13 @@
 import { UseGuards } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config/dist";
 import { Args, Context, Mutation, Query, Resolver } from "@nestjs/graphql";
+import { error } from "console";
 import { AuthUser } from "src/auth/auth-user.decorator";
 import { AuthGuard } from "src/auth/auth.guard";
 import { CreateAccountDto, CreateAccountOutput } from "./dtos/create-account.dto";
+import { EditProfileInput, EditProfileOutput } from "./dtos/edit-profile.dto";
 import { LoginInput, LoginOutput } from "./dtos/login-dto";
+import { UserProfileInput, UserProfileOutput } from "./dtos/user-profile.dto";
 import { User } from "./entities/user.entity";
 import { UserService } from "./users.service";
 @Resolver(of => User)
@@ -14,12 +17,12 @@ export class UserResolver{
         private readonly config: ConfigService,    
     ){}
 
-    @Query(type => Boolean)
+    @Query(returns => Boolean)
     users(){
         return true;
     }
 
-    @Mutation(type => CreateAccountOutput)
+    @Mutation(returns => CreateAccountOutput)
     async createAccount(
         @Args("input") createAccountDto : CreateAccountDto
     ) : Promise<CreateAccountOutput> {
@@ -42,7 +45,7 @@ export class UserResolver{
         }
     }
 
-    @Mutation(type => LoginOutput)
+    @Mutation(returns => LoginOutput)
     async login(
         @Args("input") loginInput : LoginInput
     ) : Promise<LoginOutput> {
@@ -57,10 +60,44 @@ export class UserResolver{
         }
     }
 
-    @Query(type =>User)
+    @Query(returns =>User)
     @UseGuards(AuthGuard)
     Me(@AuthUser() authUser : User) {
       console.log(authUser);
       return authUser;
+    }
+
+    @UseGuards(AuthGuard)
+    @Query(retuns => UserProfileOutput)
+    async userProfile(@Args() userProfileInput : UserProfileInput) : Promise<UserProfileOutput>{
+        try{
+            const user = await this.userService.findById(userProfileInput.userId);
+            if(!user){
+                throw Error();
+            }
+            return { 
+                ok : Boolean(user),
+                user,
+            }
+        }catch(e){
+            return { ok : false, error : "user not found"};
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Mutation(returns => EditProfileOutput)
+    async editProfile(
+        @AuthUser() authUser : User, 
+        @Args('input') editProfileInput : EditProfileInput
+    ) : Promise<EditProfileOutput>{
+        try{
+            await this.userService.editProfile(authUser.id, {...editProfileInput});
+            return { ok : true}
+        }catch(error){
+            return{
+                ok : false,
+                error
+            }
+        }
     }
 }
